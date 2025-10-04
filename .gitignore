@@ -1,0 +1,8 @@
+.env
+!.env.example
+catalina.out
+catalina.out.*
+catalina.*
+app.*
+dev.*
+prod.*
