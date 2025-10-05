@@ -30,7 +30,7 @@ build-all: clean ## Build for Windows, macOS, and Linux
 	@echo "✅ Binaries available in ./$(DIST_DIR)"
 
 # 🧩 Create zipped release archives
-release: build-all ## Build and package distributable release archives
+package: build-all ## Build and package distributable release archives
 	@echo "📦 Packaging release archives..."
 	cd $(DIST_DIR) && \
 	zip $(APP_NAME)-linux-amd64.zip $(APP_NAME)-linux-amd64 && \
@@ -39,8 +39,19 @@ release: build-all ## Build and package distributable release archives
 	zip $(APP_NAME)-windows-amd64.zip $(APP_NAME)-windows-amd64.exe
 	@echo "🎉 Release archives created in ./$(DIST_DIR)"
 
+# 🧩 Trigger a GitHub release via tagging
+release: ## Create a git tag and push to trigger GitHub release workflow
+	@if [ -z "$(v)" ]; then \
+		echo "❌ Please provide a version, e.g. 'make release v=1.0.0'"; \
+		exit 1; \
+	fi
+	@echo "🏷️  Creating and pushing git tag v$(v)..."
+	git tag v$(v)
+	git push origin v$(v)
+	@echo "🚀 Release v$(v) pushed! GitHub Actions will build and upload binaries automatically."
+
 # 🧩 Run CLI with arguments
-run: ## Run the CLI (pass args like: make run args="analyse -f catalina.out --level=ERROR")
+run: ## Run the CLI (e.g. make run args="analyse -f catalina.out --level=ERROR")
 	./$(APP_NAME) $(args)
 
 # 🧩 Install binary system-wide
@@ -73,5 +84,6 @@ endif
 
 # 🧩 Display all available commands
 help: ## Show help message
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
+	awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 	@echo "\nVersion: $(VERSION) | Commit: $(COMMIT) | Built: $(BUILD_DATE)"
