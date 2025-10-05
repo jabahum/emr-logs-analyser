@@ -1,6 +1,10 @@
 package analyser
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"text/tabwriter"
+)
 
 type LogEntry struct {
 	Timestamp string
@@ -57,4 +61,27 @@ func (s LogStats) PrintSummary() {
 		}
 	}
 	fmt.Println("=================================")
+}
+
+func PrintFilteredResults(entries []LogEntry) {
+
+	if len(entries) == 0 {
+		fmt.Println("No matching log entries found")
+		return
+	}
+
+	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 2, '\t', 0)
+	fmt.Fprintln(writer, "LEVEL/\tCLASS\tMESSAGE")
+	for _, entry := range entries {
+		message := entry.Message
+		if len(message) > 80 {
+			message = message[:77] + "..."
+
+		}
+
+		fmt.Fprintf(writer, "%s\t\t%s\t\t%s\n", entry.Level, entry.Class, message)
+	}
+
+	writer.Flush()
+	fmt.Printf("Total Entries : %d\n", len(entries))
 }

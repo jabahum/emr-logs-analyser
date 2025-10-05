@@ -100,12 +100,45 @@ func analyzeCatalinaLogs(cmd *cobra.Command, logFile string, statsFlag bool, lev
 	// --- Apply filters ---
 	if level != "" {
 		entries = filterEntriesByLevel(entries, level)
+		var converted []analyser.LogEntry
+		for _, e := range entries {
+			converted = append(converted, analyser.LogEntry{
+				Level:   e.Level,
+				Thread:  e.Thread,
+				Class:   e.Class,
+				Message: e.Message,
+			})
+		}
+		analyser.PrintFilteredResults(converted)
+
 	}
 	if thread != "" {
 		entries = filterEntriesByThread(entries, thread)
+		var converted []analyser.LogEntry
+		for _, e := range entries {
+			converted = append(converted, analyser.LogEntry{
+				Level:   e.Level,
+				Thread:  e.Thread,
+				Class:   e.Class,
+				Message: e.Message,
+			})
+		}
+		analyser.PrintFilteredResults(converted)
+
 	}
 	if class != "" {
 		entries = filterEntriesByClass(entries, class)
+		var converted []analyser.LogEntry
+		for _, e := range entries {
+			converted = append(converted, analyser.LogEntry{
+				Level:   e.Level,
+				Thread:  e.Thread,
+				Class:   e.Class,
+				Message: e.Message,
+			})
+		}
+		analyser.PrintFilteredResults(converted)
+
 	}
 
 	cmd.Printf("Processed %d Catalina log entries.\n", len(entries))
