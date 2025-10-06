@@ -3,7 +3,19 @@ package analyser
 import (
 	"fmt"
 	"os"
+	"strings"
 	"text/tabwriter"
+)
+
+// ANSI color codes
+const (
+	colorReset  = "\033[0m"
+	colorRed    = "\033[31m"
+	colorYellow = "\033[33m"
+	colorGreen  = "\033[32m"
+	colorBlue   = "\033[34m"
+	colorCyan   = "\033[36m"
+	colorWhite  = "\033[37m"
 )
 
 type LogEntry struct {
@@ -64,24 +76,52 @@ func (s LogStats) PrintSummary() {
 }
 
 func PrintFilteredResults(entries []LogEntry) {
-
 	if len(entries) == 0 {
-		fmt.Println("No matching log entries found")
+		fmt.Println("⚠️  No matching log entries found.")
 		return
 	}
+	fmt.Println(colorCyan + "🔍 Filtered Log Results:" + colorReset)
+	fmt.Println(strings.Repeat("=", 90))
 
-	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 2, '\t', 0)
-	fmt.Fprintln(writer, "LEVEL/\tCLASS\tMESSAGE")
+	// Create a tabwriter for clean column alignment
+	writer := tabwriter.NewWriter(os.Stdout, 2, 4, 2, ' ', 0)
+	fmt.Fprintf(writer, "%s\t%s\t%s\n", "LEVEL", "CLASS", "MESSAGE")
+	fmt.Fprintf(writer, "%s\t%s\t%s\n", strings.Repeat("-", 10), strings.Repeat("-", 50), strings.Repeat("-", 100))
+
 	for _, entry := range entries {
-		message := entry.Message
-		if len(message) > 80 {
-			message = message[:77] + "..."
-
-		}
-
-		fmt.Fprintf(writer, "%s\t\t%s\t\t%s\n", entry.Level, entry.Class, message)
+		levelColor := colorForLevel(entry.Level)
+		level := fmt.Sprintf("%s%-8s%s", levelColor, entry.Level, colorReset)
+		class := truncate(entry.Class, 50)
+		message := truncate(entry.Message, 100)
+		fmt.Fprintf(writer, "%s\t%s\t%s\n", level, class, message)
 	}
 
 	writer.Flush()
-	fmt.Printf("Total Entries : %d\n", len(entries))
+	fmt.Println(strings.Repeat("=", 90))
+	fmt.Printf(colorGreen+"✅ Total Entries: %d"+colorReset+"\n\n", len(entries))
+	fmt.Println()
+}
+
+// truncate shortens a string and appends "..." if it exceeds max length
+func truncate(s string, max int) string {
+	if len(s) > max {
+		return s[:max-3] + "..."
+	}
+	return s
+}
+
+// colorForLevel returns color based on log level
+func colorForLevel(level string) string {
+	switch strings.ToUpper(level) {
+	case "ERROR", "SEVERE", "FATAL":
+		return colorRed
+	case "WARN", "WARNING":
+		return colorYellow
+	case "INFO":
+		return colorGreen
+	case "DEBUG", "TRACE":
+		return colorBlue
+	default:
+		return colorWhite
+	}
 }
